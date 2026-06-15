@@ -92,9 +92,59 @@ def run_agent(query: str, wardrobe: dict) -> dict:
     Before writing code, complete the Planning Loop and State Management sections
     of planning.md — your implementation should match what you described there.
     """
-    # TODO: implement the planning loop
+    import re
+
     session = _new_session(query, wardrobe)
-    session["error"] = "Planning loop not yet implemented."
+
+    # Step 2: Parse description, size, and max_price from the query
+    query_lower = query.lower()
+
+    price_match = re.search(r"under\s*\$?(\d+\.?\d*)", query_lower)
+    max_price = float(price_match.group(1)) if price_match else None
+
+    size_match = re.search(r"\bsize\s+([a-zA-Z0-9/]+)\b", query_lower)
+    size = size_match.group(1).upper() if size_match else None
+
+    description = re.sub(r"under\s*\$?\d+\.?\d*", "", query_lower)
+    description = re.sub(r"\bsize\s+[a-zA-Z0-9/]+\b", "", description).strip()
+
+    session["parsed"] = {
+        "description": description,
+        "size": size,
+        "max_price": max_price,
+    }
+
+    # Step 3: Search listings
+    results = search_listings(description, size=size, max_price=max_price)
+    session["search_results"] = results
+
+    if not results:
+        session["error"] = (
+            "No listings found. Try a broader description, a higher price, "
+            "or remove the size filter."
+        )
+        return session
+
+    # Step 4: Select top result
+    session["selected_item"] = results[0]
+
+    # Step 5: Suggest outfit
+    session["outfit_suggestion"] = suggest_outfit(session["selected_item"], wardrobe)
+
+    if not session["outfit_suggestion"]:
+        session["error"] = "Could not generate an outfit suggestion."
+        return session
+
+    # Step 6: Create fit card
+    session["fit_card"] = create_fit_card(
+        session["outfit_suggestion"], session["selected_item"]
+    )
+
+    if not session["fit_card"] or session["fit_card"].startswith("Cannot generate"):
+        session["error"] = session["fit_card"]
+        return session
+
+    # Step 7: Return session
     return session
 
 
