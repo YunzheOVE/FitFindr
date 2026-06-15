@@ -21,7 +21,7 @@ Searches the listings dataset and returns items that match the user's descriptio
 **Input parameters:**
 <!-- List each parameter, its type, and what it represents -->
 - `description` (str): keywords describing the item the user wants.
-- `size` (str): the user's clothing size (None to skip size flitering).
+- `size` (str): the user's clothing size (None to skip size filtering).
 - `max_price` (float): the highest price the user is willing to pay.
 
 **What it returns:**
@@ -114,10 +114,9 @@ Tracked values:
 For each tool, describe the specific failure mode you're handling and what the agent does in response.
 
 | Tool | Failure mode | Agent response |
-|------|-------------|----------------|
 || search_listings | No results match the query | Set session["error"] = "No listings found. Try a broader description, a higher price, or remove the size filter." Stop and return session without calling the next tools. |
+|| suggest_outfit | Wardrobe is empty | Still call the LLM but prompt it to give general styling advice for the item without referencing a specific wardrobe. Return the advice string and continue. |
 || create_fit_card | Outfit input is missing or incomplete | If `outfit` is an empty string, set session["error"] = "Cannot generate a fit card without an outfit suggestion." Return that string without calling the LLM. |
-|| create_fit_card | Outfit input is missing or incomplete | If outfit is an empty string, return "Cannot generate a fit card without an outfit suggestion." without calling the LLM. |
 
 ---
 
